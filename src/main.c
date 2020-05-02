@@ -6,7 +6,8 @@
 void show_utf8_prop(Display* display, Window window, Atom property) {
   Atom type;
   int format;
-  unsigned long size, itemCount;
+  unsigned long size;
+  unsigned long itemCount;
   unsigned char* propertyBuffer = NULL;
 
   XGetWindowProperty(display, window, property, 0, 0, False, AnyPropertyType, &type, &format, &itemCount, &size, &propertyBuffer);
@@ -22,9 +23,14 @@ void show_utf8_prop(Display* display, Window window, Atom property) {
 
 int main(void) {
   Display* display;
-  Window targetWindow, root;
+  Window targetWindow;
+  Window root;
   int screen;
-  Atom selection, targetProperty, utf8;
+
+  Atom selection;
+  Atom targetProperty;
+  Atom utf8;
+  
   XEvent event;
   XSelectionEvent* selectionEvent;
 
