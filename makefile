@@ -7,7 +7,8 @@ SRC_PATH=$(CURRENT_PATH)/src
 CC=gcc
 GDB=gdb
 
-COMPILER_FLAGS=
+COMPILER_FLAGS=-Wall -Wextra
+LINKED_LIBRARIES=-lX11
 
 EXEC=copy-pallet.out
 
@@ -24,6 +25,9 @@ $(EXEC): $(OBJS)
 
 %.o: $(SRC_PATH)/*/%.c
 	$(CC) $(COMPILER_FLAGS) -c $^ -o $(BUILD_PATH)/$@
+
+run:
+	$(BIN_PATH)/$(EXEC)
 
 clean: SHELL:=/bin/bash
 clean:
