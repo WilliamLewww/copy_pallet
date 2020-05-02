@@ -31,5 +31,5 @@ run:
 
 clean: SHELL:=/bin/bash
 clean:
-	find $(BIN_PATH) -type f -not -name '.gitignore' -delete
-	find $(BUILD_PATH) -type f -not -name '.gitignore' -delete
+	find $(BIN_PATH) -type f -not -name '.gitkeep' -delete
+	find $(BUILD_PATH) -type f -not -name '.gitkeep' -delete
