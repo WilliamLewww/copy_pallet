@@ -247,73 +247,17 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
       focusCount += 1;
     }
     if (event.type == KeyPress) {
-      if (event.xkey.keycode == XKeysymToKeycode(display, XK_1)) {
-        if (currentNode != NULL) {
-          isRunning = 0;
-          selectedString = currentNode->string;
-        }
-      }
-      if (event.xkey.keycode == XKeysymToKeycode(display, XK_2)) {
+      int keyIndex = event.xkey.keycode - 9;
+
+      if (keyIndex > 0 && keyIndex < 7) {
         struct LinkedSelectionNode* tempCurrentNode = currentNode;
         int count = 0;
-        while (tempCurrentNode != NULL && count < 1) {
+        while (tempCurrentNode != NULL && count < keyIndex - 1) {
           tempCurrentNode = tempCurrentNode->previous;
           count += 1;
         }
 
-        if (count == 1 && tempCurrentNode != NULL) {
-          isRunning = 0;
-          selectedString = tempCurrentNode->string;
-        }
-      }
-      if (event.xkey.keycode == XKeysymToKeycode(display, XK_3)) {
-        struct LinkedSelectionNode* tempCurrentNode = currentNode;
-        int count = 0;
-        while (tempCurrentNode != NULL && count < 2) {
-          tempCurrentNode = tempCurrentNode->previous;
-          count += 1;
-        }
-
-        if (count == 2 && tempCurrentNode != NULL) {
-          isRunning = 0;
-          selectedString = tempCurrentNode->string;
-        }
-      }
-      if (event.xkey.keycode == XKeysymToKeycode(display, XK_4)) {
-        struct LinkedSelectionNode* tempCurrentNode = currentNode;
-        int count = 0;
-        while (tempCurrentNode != NULL && count < 3) {
-          tempCurrentNode = tempCurrentNode->previous;
-          count += 1;
-        }
-
-        if (count == 3 && tempCurrentNode != NULL) {
-          isRunning = 0;
-          selectedString = tempCurrentNode->string;
-        }
-      }
-      if (event.xkey.keycode == XKeysymToKeycode(display, XK_5)) {
-        struct LinkedSelectionNode* tempCurrentNode = currentNode;
-        int count = 0;
-        while (tempCurrentNode != NULL && count < 4) {
-          tempCurrentNode = tempCurrentNode->previous;
-          count += 1;
-        }
-
-        if (count == 4 && tempCurrentNode != NULL) {
-          isRunning = 0;
-          selectedString = tempCurrentNode->string;
-        }
-      }
-      if (event.xkey.keycode == XKeysymToKeycode(display, XK_6)) {
-        struct LinkedSelectionNode* tempCurrentNode = currentNode;
-        int count = 0;
-        while (tempCurrentNode != NULL && count < 5) {
-          tempCurrentNode = tempCurrentNode->previous;
-          count += 1;
-        }
-
-        if (count == 5 && tempCurrentNode != NULL) {
+        if (count == keyIndex - 1 && tempCurrentNode != NULL) {
           isRunning = 0;
           selectedString = tempCurrentNode->string;
         }
