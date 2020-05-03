@@ -94,20 +94,23 @@ int main(void) {
   XEvent event;
 
   unsigned int modifiers = ControlMask | ShiftMask;
-  int keycode = XKeysymToKeycode(display,XK_K);
-  Window grabWindow = rootWindow;
-  Bool ownerEvent = False;
-  int pointerMode = GrabModeAsync;
-  int keyboardMode = GrabModeAsync;
+  int copyKeyCode = XKeysymToKeycode(display, XK_C);
+  int pasteKeyCode = XKeysymToKeycode(display, XK_V);
 
-  XGrabKey(display, keycode, modifiers, grabWindow, ownerEvent, pointerMode, keyboardMode);
+  XGrabKey(display, copyKeyCode, modifiers, rootWindow, False, GrabModeAsync, GrabModeAsync);
+  XGrabKey(display, pasteKeyCode, modifiers, rootWindow, False, GrabModeAsync, GrabModeAsync);
 
   XSelectInput(display, rootWindow, KeyPressMask);
   while(1) {
     XNextEvent(display, &event);
     if (event.type == KeyPress) {
-      // XUngrabKey(display,keycode,modifiers,grabWindow);
-      createWindow();
+      if (event.xkey.keycode == 54) {
+        createWindow();
+      }
+
+      if (event.xkey.keycode == 55) {
+        createWindow();
+      }
     }
   }
 
