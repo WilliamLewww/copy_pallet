@@ -221,7 +221,7 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
   while (isRunning) {
     XNextEvent(display, &event);
     if (event.type == Expose) {
-      // XFillRectangle(display, window, DefaultGC(display, screen), 20, 20, 10, 10);
+      XDrawRectangle(display, window, DefaultGC(display, screen), 3, 3, 193, 93);
       struct LinkedSelectionNode* tempCurrentNode = currentNode;
       for (int x = 0; x < 6; x++) {
         if (tempCurrentNode != NULL) {
@@ -229,8 +229,8 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
           indexBuffer[0] = (x + 1) + '0';
           indexBuffer[1] = ':';
 
-          XDrawString(display, window, DefaultGC(display, screen), 2, 15 + 15 * x, indexBuffer, 2);
-          XDrawString(display, window, DefaultGC(display, screen), 20, 15 + 15 * x, (char*)tempCurrentNode->string, tempCurrentNode->stringSize);
+          XDrawString(display, window, DefaultGC(display, screen), 5, 15 + 15 * x, indexBuffer, 2);
+          XDrawString(display, window, DefaultGC(display, screen), 23, 15 + 15 * x, (char*)tempCurrentNode->string, tempCurrentNode->stringSize);
           tempCurrentNode = tempCurrentNode->previous;
 
           free(indexBuffer);
