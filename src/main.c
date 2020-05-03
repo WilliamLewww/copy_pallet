@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <X11/keysym.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
@@ -60,6 +61,8 @@ struct LinkedSelectionNode* createLinkedSelectionNode() {
       linkedSelectionNode->string = (unsigned char*)malloc(size * sizeof(unsigned char));
       memcpy(linkedSelectionNode->string, propertyBuffer, size * sizeof(unsigned char));
       linkedSelectionNode->stringSize = size;
+      linkedSelectionNode->next = NULL;
+      linkedSelectionNode->previous = NULL;
 
       XFree(propertyBuffer);
 
@@ -70,28 +73,37 @@ struct LinkedSelectionNode* createLinkedSelectionNode() {
   return linkedSelectionNode;
 }
 
-void createSelectionWindow() {
+void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
   Display* display;
   Window window;
   XEvent event;
   int screen;
 
-  const char* msg = "Hello, World!";
-
   display = XOpenDisplay(NULL);
   screen = DefaultScreen(display);
-  window = XCreateSimpleWindow(display, RootWindow(display, screen), 10, 10, 100, 100, 1, BlackPixel(display, screen), WhitePixel(display, screen));
+  window = XCreateSimpleWindow(display, RootWindow(display, screen), 10, 10, 200, 100, 1, BlackPixel(display, screen), WhitePixel(display, screen));
   XSelectInput(display, window, ExposureMask | KeyPressMask);
   XMapWindow(display, window);
 
-  while (1) {
+  int isRunning = 1;
+  while (isRunning) {
     XNextEvent(display, &event);
     if (event.type == Expose) {
-      XFillRectangle(display, window, DefaultGC(display, screen), 20, 20, 10, 10);
-      XDrawString(display, window, DefaultGC(display, screen), 10, 50, msg, strlen(msg));
+      // XFillRectangle(display, window, DefaultGC(display, screen), 20, 20, 10, 10);
+
+      struct LinkedSelectionNode* tempCurrentNode = currentNode;
+      for (int x = 0; x < 5; x++) {
+        if (tempCurrentNode != NULL) {
+          XDrawString(display, window, DefaultGC(display, screen), 10, 90 - 15 * x, (char*)tempCurrentNode->string, tempCurrentNode->stringSize);
+          tempCurrentNode = tempCurrentNode->previous;
+        }
+      }
+
     }
     if (event.type == KeyPress) {
-      break;
+      if (event.xkey.keycode == XKeysymToKeycode(display, XK_Escape)) {
+        isRunning = 0;
+      }
     }
   }
   XCloseDisplay(display);
@@ -119,22 +131,23 @@ int main(void) {
   while (isRunning) {
     XNextEvent(display, &event);
     if (event.type == KeyPress) {
-      if (event.xkey.keycode == 54) {
+      if (event.xkey.keycode == XKeysymToKeycode(display, XK_C)) {
         if (rootNode == NULL) {
           rootNode = createLinkedSelectionNode();
           currentNode = rootNode;
         }
         else {
           currentNode->next = createLinkedSelectionNode();
+          currentNode->next->previous = currentNode;
           currentNode = currentNode->next;
         }
       }
 
-      if (event.xkey.keycode == 55) {
-        createSelectionWindow();
+      if (event.xkey.keycode == XKeysymToKeycode(display, XK_V)) {
+        createSelectionWindow(currentNode);
       }
 
-      if (event.xkey.keycode == 25) {
+      if (event.xkey.keycode == XKeysymToKeycode(display, XK_W)) {
         isRunning = 0;
       }
     }
