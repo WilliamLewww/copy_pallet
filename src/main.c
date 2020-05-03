@@ -2,11 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 
 void getPropertyUTF8() {
   Display* display;
   Window window;
-  Window root;
+  Window rootWindow;
   int screen;
 
   Atom selection;
@@ -18,14 +19,14 @@ void getPropertyUTF8() {
 
   display = XOpenDisplay(NULL);
   screen = DefaultScreen(display);
-  root = RootWindow(display, screen);
+  rootWindow = RootWindow(display, screen);
 
   selection = XInternAtom(display, "CLIPBOARD", False);
   utf8 = XInternAtom(display, "UTF8_STRING", False);
 
   /* The selection owner will store the data in a property on this
    * window: */
-  window = XCreateSimpleWindow(display, root, -10, -10, 1, 1, 0, 0, 0);
+  window = XCreateSimpleWindow(display, rootWindow, -10, -10, 1, 1, 0, 0, 0);
 
   /* That's the property used by the owner. Note that it's completely
    * arbitrary. */
@@ -61,7 +62,7 @@ void getPropertyUTF8() {
   }
 }
 
-int main(void) {
+void createWindow() {
   getPropertyUTF8();
 
   Display* display;
@@ -83,10 +84,36 @@ int main(void) {
       XFillRectangle(display, window, DefaultGC(display, screen), 20, 20, 10, 10);
       XDrawString(display, window, DefaultGC(display, screen), 10, 50, msg, strlen(msg));
     }
-  if (event.type == KeyPress)
-    break;
+    if (event.type == KeyPress) {
+      break;
+    }
   }
   XCloseDisplay(display);
+}
 
+int main(void) {
+  Display* display = XOpenDisplay(0);
+  Window rootWindow = DefaultRootWindow(display);
+  XEvent event;
+
+  unsigned int modifiers = ControlMask | ShiftMask;
+  int keycode = XKeysymToKeycode(display,XK_K);
+  Window grabWindow = rootWindow;
+  Bool ownerEvent = False;
+  int pointerMode = GrabModeAsync;
+  int keyboardMode = GrabModeAsync;
+
+  XGrabKey(display, keycode, modifiers, grabWindow, ownerEvent, pointerMode, keyboardMode);
+
+  XSelectInput(display, rootWindow, KeyPressMask);
+  while(1) {
+    XNextEvent(display, &event);
+    if (event.type == KeyPress) {
+      XUngrabKey(display,keycode,modifiers,grabWindow);
+      break;
+    }
+  }
+
+  XCloseDisplay(display);
   return 0;
 }
