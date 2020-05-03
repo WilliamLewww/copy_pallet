@@ -22,6 +22,74 @@ struct WindowHints {
   unsigned long status;
 };
 
+void sendSelectionEmpty(Display* display, XSelectionRequestEvent* selectionRequestEvent) {
+  XSelectionEvent selectionEvent;
+
+  selectionEvent.type = SelectionNotify;
+  selectionEvent.requestor = selectionRequestEvent->requestor;
+  selectionEvent.selection = selectionRequestEvent->selection;
+  selectionEvent.target = selectionRequestEvent->target;
+  selectionEvent.property = None;
+  selectionEvent.time = selectionRequestEvent->time;
+
+  XSendEvent(display, selectionRequestEvent->requestor, True, NoEventMask, (XEvent*)&selectionEvent);
+}
+
+void sendSelectionUTF8(Display* display, XSelectionRequestEvent* selectionRequestEvent, Atom utf8, char* data) {
+    XSelectionEvent selectionEvent;
+
+    XChangeProperty(display, selectionRequestEvent->requestor, selectionRequestEvent->property, utf8, 8, PropModeReplace, (unsigned char*)data, strlen(data));
+
+    selectionEvent.type = SelectionNotify;
+    selectionEvent.requestor = selectionRequestEvent->requestor;
+    selectionEvent.selection = selectionRequestEvent->selection;
+    selectionEvent.target = selectionRequestEvent->target;
+    selectionEvent.property = selectionRequestEvent->property;
+    selectionEvent.time = selectionRequestEvent->time;
+
+    XSendEvent(display, selectionRequestEvent->requestor, True, NoEventMask, (XEvent*)&selectionEvent);
+}
+
+void setClipboard(char* data) {
+  Display* display;
+  Window owner;
+  Window root;
+  int screen;
+  Atom selection;
+  Atom utf8;
+  XEvent event;
+  XSelectionRequestEvent *selectionRequestEvent;
+
+  display = XOpenDisplay(NULL);
+
+  screen = DefaultScreen(display);
+  root = RootWindow(display, screen);
+
+  owner = XCreateSimpleWindow(display, root, -10, -10, 1, 1, 0, 0, 0);
+
+  selection = XInternAtom(display, "CLIPBOARD", False);
+  utf8 = XInternAtom(display, "UTF8_STRING", False);
+  XSetSelectionOwner(display, selection, owner, CurrentTime);
+
+  int isRunning = 1;
+  while (isRunning) {
+    XNextEvent(display, &event);
+    if (event.type == SelectionClear) {
+      isRunning = 0;
+    }
+    if (event.type == SelectionRequest) {
+      selectionRequestEvent = (XSelectionRequestEvent*)&event.xselectionrequest;
+
+      if (selectionRequestEvent->target != utf8 || selectionRequestEvent->property == None) {
+        sendSelectionEmpty(display, selectionRequestEvent);
+      }
+      else {
+        sendSelectionUTF8(display, selectionRequestEvent, utf8, data);
+      }
+    }
+  }
+}
+
 struct LinkedSelectionNode* createLinkedSelectionNode() {
   struct LinkedSelectionNode* linkedSelectionNode;
 
@@ -45,7 +113,7 @@ struct LinkedSelectionNode* createLinkedSelectionNode() {
   utf8 = XInternAtom(display, "UTF8_STRING", False);
 
   window = XCreateSimpleWindow(display, rootWindow, -10, -10, 1, 1, 0, 0, 0);
-  property = XInternAtom(display, "PENGUIN", False);
+  property = XInternAtom(display, "PROPERTY", False);
   XConvertSelection(display, selection, utf8, property, window, CurrentTime);
 
   XNextEvent(display, &event);
@@ -147,6 +215,8 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
 
   int focusCount = 0;
 
+  unsigned char* selectedString = NULL;
+
   int isRunning = 1;
   while (isRunning) {
     XNextEvent(display, &event);
@@ -177,12 +247,88 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
       focusCount += 1;
     }
     if (event.type == KeyPress) {
+      if (event.xkey.keycode == XKeysymToKeycode(display, XK_1)) {
+        if (currentNode != NULL) {
+          isRunning = 0;
+          selectedString = currentNode->string;
+        }
+      }
+      if (event.xkey.keycode == XKeysymToKeycode(display, XK_2)) {
+        struct LinkedSelectionNode* tempCurrentNode = currentNode;
+        int count = 0;
+        while (tempCurrentNode != NULL && count < 1) {
+          tempCurrentNode = tempCurrentNode->previous;
+          count += 1;
+        }
+
+        if (count == 1 && tempCurrentNode != NULL) {
+          isRunning = 0;
+          selectedString = tempCurrentNode->string;
+        }
+      }
+      if (event.xkey.keycode == XKeysymToKeycode(display, XK_3)) {
+        struct LinkedSelectionNode* tempCurrentNode = currentNode;
+        int count = 0;
+        while (tempCurrentNode != NULL && count < 2) {
+          tempCurrentNode = tempCurrentNode->previous;
+          count += 1;
+        }
+
+        if (count == 2 && tempCurrentNode != NULL) {
+          isRunning = 0;
+          selectedString = tempCurrentNode->string;
+        }
+      }
+      if (event.xkey.keycode == XKeysymToKeycode(display, XK_4)) {
+        struct LinkedSelectionNode* tempCurrentNode = currentNode;
+        int count = 0;
+        while (tempCurrentNode != NULL && count < 3) {
+          tempCurrentNode = tempCurrentNode->previous;
+          count += 1;
+        }
+
+        if (count == 3 && tempCurrentNode != NULL) {
+          isRunning = 0;
+          selectedString = tempCurrentNode->string;
+        }
+      }
+      if (event.xkey.keycode == XKeysymToKeycode(display, XK_5)) {
+        struct LinkedSelectionNode* tempCurrentNode = currentNode;
+        int count = 0;
+        while (tempCurrentNode != NULL && count < 4) {
+          tempCurrentNode = tempCurrentNode->previous;
+          count += 1;
+        }
+
+        if (count == 4 && tempCurrentNode != NULL) {
+          isRunning = 0;
+          selectedString = tempCurrentNode->string;
+        }
+      }
+      if (event.xkey.keycode == XKeysymToKeycode(display, XK_6)) {
+        struct LinkedSelectionNode* tempCurrentNode = currentNode;
+        int count = 0;
+        while (tempCurrentNode != NULL && count < 5) {
+          tempCurrentNode = tempCurrentNode->previous;
+          count += 1;
+        }
+
+        if (count == 5 && tempCurrentNode != NULL) {
+          isRunning = 0;
+          selectedString = tempCurrentNode->string;
+        }
+      }
       if (event.xkey.keycode == XKeysymToKeycode(display, XK_Escape)) {
         isRunning = 0;
       }
     }
   }
+
   XCloseDisplay(display);
+
+  if (selectedString != NULL) {
+    setClipboard((char*)selectedString);
+  }
 }
 
 int main(void) {
