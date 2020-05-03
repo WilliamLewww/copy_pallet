@@ -1,9 +1,21 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-void getPropertyUTF8() {
+struct LinkedSelectionNode {
+  unsigned char* string;
+  uint64_t stringSize;
+
+  struct LinkedSelectionNode* next;
+  struct LinkedSelectionNode* previous;
+};
+
+struct LinkedSelectionNode* createLinkedSelectionNode() {
+  struct LinkedSelectionNode* linkedSelectionNode;
+
   Display* display;
   Window window;
   Window rootWindow;
@@ -23,16 +35,8 @@ void getPropertyUTF8() {
   selection = XInternAtom(display, "CLIPBOARD", False);
   utf8 = XInternAtom(display, "UTF8_STRING", False);
 
-  /* The selection owner will store the data in a property on this
-   * window: */
   window = XCreateSimpleWindow(display, rootWindow, -10, -10, 1, 1, 0, 0, 0);
-
-  /* That's the property used by the owner. Note that it's completely
-   * arbitrary. */
   property = XInternAtom(display, "PENGUIN", False);
-
-  /* Request conversion to UTF-8. Not all owners will be able to
-   * fulfill that request. */
   XConvertSelection(display, selection, utf8, property, window, CurrentTime);
 
   XNextEvent(display, &event);
@@ -44,21 +48,26 @@ void getPropertyUTF8() {
     else {
       Atom type;
       int format;
-      unsigned long size;
-      unsigned long itemCount;
+      uint64_t size;
+      uint64_t itemCount;
       unsigned char* propertyBuffer = NULL;
 
       XGetWindowProperty(display, window, property, 0, 0, False, AnyPropertyType, &type, &format, &itemCount, &size, &propertyBuffer);
-      printf("Property size: %lu\n", size);
       XFree(propertyBuffer);
-
       XGetWindowProperty(display, window, property, 0, size, False, AnyPropertyType, &type, &format, &itemCount, &itemCount, &propertyBuffer);
-      printf("%s\n", propertyBuffer);
+
+      linkedSelectionNode = (struct LinkedSelectionNode*)malloc(size * sizeof(unsigned char) + sizeof(uint64_t) + 2 * sizeof(struct LinkedSelectionNode*));
+      linkedSelectionNode->string = (unsigned char*)malloc(size * sizeof(unsigned char));
+      memcpy(linkedSelectionNode->string, propertyBuffer, size * sizeof(unsigned char));
+      linkedSelectionNode->stringSize = size;
+
       XFree(propertyBuffer);
 
       XDeleteProperty(display, window, property);
     }
   }
+
+  return linkedSelectionNode;
 }
 
 void createWindow() {
@@ -96,20 +105,39 @@ int main(void) {
   unsigned int modifiers = ControlMask | ShiftMask;
   int copyKeyCode = XKeysymToKeycode(display, XK_C);
   int pasteKeyCode = XKeysymToKeycode(display, XK_V);
+  int closeKeyCode = XKeysymToKeycode(display, XK_W);
 
   XGrabKey(display, copyKeyCode, modifiers, rootWindow, False, GrabModeAsync, GrabModeAsync);
   XGrabKey(display, pasteKeyCode, modifiers, rootWindow, False, GrabModeAsync, GrabModeAsync);
-
+  XGrabKey(display, closeKeyCode, modifiers, rootWindow, False, GrabModeAsync, GrabModeAsync);
   XSelectInput(display, rootWindow, KeyPressMask);
-  while(1) {
+
+  struct LinkedSelectionNode* rootNode = NULL;
+  struct LinkedSelectionNode* currentNode = NULL;
+
+  int isRunning = 1;
+  while (isRunning) {
     XNextEvent(display, &event);
     if (event.type == KeyPress) {
       if (event.xkey.keycode == 54) {
+        if (rootNode == NULL) {
+          rootNode = createLinkedSelectionNode();
+          currentNode = rootNode;
+        }
+        else {
+          currentNode->next = createLinkedSelectionNode();
+          currentNode = currentNode->next;
+        }
+
         createWindow();
       }
 
       if (event.xkey.keycode == 55) {
         createWindow();
+      }
+
+      if (event.xkey.keycode == 25) {
+        isRunning = 0;
       }
     }
   }
