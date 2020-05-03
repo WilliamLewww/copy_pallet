@@ -70,7 +70,7 @@ struct LinkedSelectionNode* createLinkedSelectionNode() {
   return linkedSelectionNode;
 }
 
-void createWindow() {
+void createSelectionWindow() {
   Display* display;
   Window window;
   XEvent event;
@@ -128,12 +128,10 @@ int main(void) {
           currentNode->next = createLinkedSelectionNode();
           currentNode = currentNode->next;
         }
-
-        createWindow();
       }
 
       if (event.xkey.keycode == 55) {
-        createWindow();
+        createSelectionWindow();
       }
 
       if (event.xkey.keycode == 25) {
