@@ -1,36 +1,18 @@
 // source: https://www.uninformativ.de/blog/postings/2017-04-02/0/POSTING-en.html
-
 #include <stdio.h>
+#include <string.h>
 #include <X11/Xlib.h>
 
-void show_utf8_prop(Display* display, Window window, Atom property) {
-  Atom type;
-  int format;
-  unsigned long size;
-  unsigned long itemCount;
-  unsigned char* propertyBuffer = NULL;
-
-  XGetWindowProperty(display, window, property, 0, 0, False, AnyPropertyType, &type, &format, &itemCount, &size, &propertyBuffer);
-  printf("Property size: %lu\n", size);
-  XFree(propertyBuffer);
-
-  XGetWindowProperty(display, window, property, 0, size, False, AnyPropertyType, &type, &format, &itemCount, &itemCount, &propertyBuffer);
-  printf("%s\n", propertyBuffer);
-  XFree(propertyBuffer);
-
-  XDeleteProperty(display, window, property);
-}
-
-int main(void) {
+void getPropertyUTF8() {
   Display* display;
-  Window targetWindow;
+  Window window;
   Window root;
   int screen;
 
   Atom selection;
-  Atom targetProperty;
+  Atom property;
   Atom utf8;
-  
+
   XEvent event;
   XSelectionEvent* selectionEvent;
 
@@ -43,15 +25,15 @@ int main(void) {
 
   /* The selection owner will store the data in a property on this
    * window: */
-  targetWindow = XCreateSimpleWindow(display, root, -10, -10, 1, 1, 0, 0, 0);
+  window = XCreateSimpleWindow(display, root, -10, -10, 1, 1, 0, 0, 0);
 
   /* That's the property used by the owner. Note that it's completely
    * arbitrary. */
-  targetProperty = XInternAtom(display, "PENGUIN", False);
+  property = XInternAtom(display, "PENGUIN", False);
 
   /* Request conversion to UTF-8. Not all owners will be able to
    * fulfill that request. */
-  XConvertSelection(display, selection, utf8, targetProperty, targetWindow, CurrentTime);
+  XConvertSelection(display, selection, utf8, property, window, CurrentTime);
 
   XNextEvent(display, &event);
   if (event.type == SelectionNotify) {
@@ -60,9 +42,51 @@ int main(void) {
       printf("Conversion could not be performed.\n");
     }
     else {
-      show_utf8_prop(display, targetWindow, targetProperty);
+      Atom type;
+      int format;
+      unsigned long size;
+      unsigned long itemCount;
+      unsigned char* propertyBuffer = NULL;
+
+      XGetWindowProperty(display, window, property, 0, 0, False, AnyPropertyType, &type, &format, &itemCount, &size, &propertyBuffer);
+      printf("Property size: %lu\n", size);
+      XFree(propertyBuffer);
+
+      XGetWindowProperty(display, window, property, 0, size, False, AnyPropertyType, &type, &format, &itemCount, &itemCount, &propertyBuffer);
+      printf("%s\n", propertyBuffer);
+      XFree(propertyBuffer);
+
+      XDeleteProperty(display, window, property);
     }
   }
+}
+
+int main(void) {
+  getPropertyUTF8();
+
+  Display* display;
+  Window window;
+  XEvent event;
+  int screen;
+
+  const char* msg = "Hello, World!";
+
+  display = XOpenDisplay(NULL);
+  screen = DefaultScreen(display);
+  window = XCreateSimpleWindow(display, RootWindow(display, screen), 10, 10, 100, 100, 1, BlackPixel(display, screen), WhitePixel(display, screen));
+  XSelectInput(display, window, ExposureMask | KeyPressMask);
+  XMapWindow(display, window);
+
+  while (1) {
+    XNextEvent(display, &event);
+    if (event.type == Expose) {
+      XFillRectangle(display, window, DefaultGC(display, screen), 20, 20, 10, 10);
+      XDrawString(display, window, DefaultGC(display, screen), 10, 50, msg, strlen(msg));
+    }
+  if (event.type == KeyPress)
+    break;
+  }
+  XCloseDisplay(display);
 
   return 0;
 }
