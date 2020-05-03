@@ -230,7 +230,7 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
           indexBuffer[1] = ':';
 
           XDrawString(display, window, DefaultGC(display, screen), 5, 15 + 15 * x, indexBuffer, 2);
-          XDrawString(display, window, DefaultGC(display, screen), 23, 15 + 15 * x, (char*)tempCurrentNode->string, 28);
+          XDrawString(display, window, DefaultGC(display, screen), 23, 15 + 15 * x, (char*)tempCurrentNode->string, 28 > tempCurrentNode->stringSize ? tempCurrentNode->stringSize : 28);
           tempCurrentNode = tempCurrentNode->previous;
 
           free(indexBuffer);
