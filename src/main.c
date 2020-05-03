@@ -81,6 +81,35 @@ struct LinkedSelectionNode* createLinkedSelectionNode() {
   return linkedSelectionNode;
 }
 
+void getMousePosition(int* mouseX, int* mouseY) {
+  Window* rootWindow;
+  Window returnWindow;
+  
+  int numberOfScreen;
+  int rootX;
+  int rootY;
+  int windowX;
+  int windowY;
+  unsigned int maskReturn;
+
+  Display* display = XOpenDisplay(NULL);
+  numberOfScreen = XScreenCount(display);
+  rootWindow = malloc(numberOfScreen * sizeof(Window));
+
+  for (int x = 0; x < numberOfScreen; x++) {
+    rootWindow[x] = XRootWindow(display, x);
+  }
+  for (int x = 0; x < numberOfScreen; x++) {
+    XQueryPointer(display, rootWindow[x], &returnWindow, &returnWindow, &rootX, &rootY, &windowX, &windowY, &maskReturn);
+  }
+
+  *mouseX = rootX;
+  *mouseY = rootY;
+
+  free(rootWindow);
+  XCloseDisplay(display);
+}
+
 void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
   Display* display;
   Window window;
@@ -92,7 +121,11 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
   display = XOpenDisplay(NULL);
   screen = DefaultScreen(display);
 
-  window = XCreateSimpleWindow(display, RootWindow(display, screen), 10, 10, 200, 100, 1, BlackPixel(display, screen), WhitePixel(display, screen));
+  int mouseX = 0;
+  int mouseY = 0;
+  getMousePosition(&mouseX, &mouseY);
+
+  window = XCreateSimpleWindow(display, RootWindow(display, screen), mouseX, mouseY, 200, 100, 1, BlackPixel(display, screen), WhitePixel(display, screen));
   
   sizeHints = XAllocSizeHints();
   sizeHints->flags=USPosition | PAspect | PMinSize | PMaxSize;
