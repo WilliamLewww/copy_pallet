@@ -1,4 +1,3 @@
-// source: https://www.uninformativ.de/blog/postings/2017-04-02/0/POSTING-en.html
 #include <stdio.h>
 #include <string.h>
 #include <X11/Xlib.h>
@@ -63,8 +62,6 @@ void getPropertyUTF8() {
 }
 
 void createWindow() {
-  getPropertyUTF8();
-
   Display* display;
   Window window;
   XEvent event;
@@ -109,8 +106,8 @@ int main(void) {
   while(1) {
     XNextEvent(display, &event);
     if (event.type == KeyPress) {
-      XUngrabKey(display,keycode,modifiers,grabWindow);
-      break;
+      // XUngrabKey(display,keycode,modifiers,grabWindow);
+      createWindow();
     }
   }
 
