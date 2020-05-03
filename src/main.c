@@ -84,7 +84,7 @@ struct LinkedSelectionNode* createLinkedSelectionNode() {
 void getMousePosition(int* mouseX, int* mouseY) {
   Window* rootWindow;
   Window returnWindow;
-  
+
   int numberOfScreen;
   int rootX;
   int rootY;
@@ -152,7 +152,7 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
       // XFillRectangle(display, window, DefaultGC(display, screen), 20, 20, 10, 10);
 
       struct LinkedSelectionNode* tempCurrentNode = currentNode;
-      for (int x = 0; x < 5; x++) {
+      for (int x = 0; x < 6; x++) {
         if (tempCurrentNode != NULL) {
           char* indexBuffer = (char*)malloc(2 * sizeof(char));
           indexBuffer[0] = (x + 1) + '0';
