@@ -14,6 +14,14 @@ struct LinkedSelectionNode {
   struct LinkedSelectionNode* previous;
 };
 
+struct WindowHints {
+  unsigned long flags;
+  unsigned long functions;
+  unsigned long decorations;
+  long inputMode;
+  unsigned long status;
+};
+
 struct LinkedSelectionNode* createLinkedSelectionNode() {
   struct LinkedSelectionNode* linkedSelectionNode;
 
@@ -79,9 +87,28 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
   XEvent event;
   int screen;
 
+  XSizeHints* sizeHints;
+
   display = XOpenDisplay(NULL);
   screen = DefaultScreen(display);
+
   window = XCreateSimpleWindow(display, RootWindow(display, screen), 10, 10, 200, 100, 1, BlackPixel(display, screen), WhitePixel(display, screen));
+  
+  sizeHints = XAllocSizeHints();
+  sizeHints->flags=USPosition | PAspect | PMinSize | PMaxSize;
+  sizeHints->min_width=200;
+  sizeHints->min_height=100;
+  sizeHints->max_width=200*2;
+  sizeHints->max_height=100;
+  XSetWMNormalHints(display, window, sizeHints);
+
+  struct WindowHints windowHints;
+  Atom property;
+  windowHints.flags = 2;
+  windowHints.decorations = 0;
+  property = XInternAtom(display, "_MOTIF_WM_HINTS", True);
+  XChangeProperty(display, window, property, property, 32, PropModeReplace, (unsigned char*)&windowHints, 5);
+
   XSelectInput(display, window, ExposureMask | KeyPressMask);
   XMapWindow(display, window);
 
@@ -94,8 +121,15 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
       struct LinkedSelectionNode* tempCurrentNode = currentNode;
       for (int x = 0; x < 5; x++) {
         if (tempCurrentNode != NULL) {
-          XDrawString(display, window, DefaultGC(display, screen), 10, 90 - 15 * x, (char*)tempCurrentNode->string, tempCurrentNode->stringSize);
+          char* indexBuffer = (char*)malloc(2 * sizeof(char));
+          indexBuffer[0] = (x + 1) + '0';
+          indexBuffer[1] = ':';
+
+          XDrawString(display, window, DefaultGC(display, screen), 2, 90 - 15 * x, indexBuffer, 2);
+          XDrawString(display, window, DefaultGC(display, screen), 20, 90 - 15 * x, (char*)tempCurrentNode->string, tempCurrentNode->stringSize);
           tempCurrentNode = tempCurrentNode->previous;
+
+          free(indexBuffer);
         }
       }
 
