@@ -142,15 +142,16 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
   property = XInternAtom(display, "_MOTIF_WM_HINTS", True);
   XChangeProperty(display, window, property, property, 32, PropModeReplace, (unsigned char*)&windowHints, 5);
 
-  XSelectInput(display, window, ExposureMask | KeyPressMask);
+  XSelectInput(display, window, ExposureMask | KeyPressMask | FocusChangeMask);
   XMapWindow(display, window);
+
+  int focusCount = 0;
 
   int isRunning = 1;
   while (isRunning) {
     XNextEvent(display, &event);
     if (event.type == Expose) {
       // XFillRectangle(display, window, DefaultGC(display, screen), 20, 20, 10, 10);
-
       struct LinkedSelectionNode* tempCurrentNode = currentNode;
       for (int x = 0; x < 6; x++) {
         if (tempCurrentNode != NULL) {
@@ -165,7 +166,15 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
           free(indexBuffer);
         }
       }
-
+    }
+    if (event.type == FocusOut) {
+      if (focusCount >= 2) {
+        isRunning = 0;
+      }
+      focusCount += 1;
+    }
+    if (event.type == FocusIn) {
+      focusCount += 1;
     }
     if (event.type == KeyPress) {
       if (event.xkey.keycode == XKeysymToKeycode(display, XK_Escape)) {
