@@ -108,6 +108,7 @@ struct LinkedSelectionNode* createLinkedSelectionNode() {
     }
   }
 
+  XCloseDisplay(display);
   return linkedSelectionNode;
 }
 
@@ -316,12 +317,11 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
       }
     }
   }
-
-  XCloseDisplay(display);
-
   if (selectedString != NULL) {
     clipboardString = selectedString;
   }
+
+  XCloseDisplay(display);
 }
 
 int main(void) {
