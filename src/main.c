@@ -155,14 +155,14 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
   int mouseY = 0;
   getMousePosition(&mouseX, &mouseY);
 
-  window = XCreateSimpleWindow(display, RootWindow(display, screen), mouseX, mouseY, 200, 100, 1, BlackPixel(display, screen), WhitePixel(display, screen));
+  window = XCreateSimpleWindow(display, RootWindow(display, screen), mouseX, mouseY, 200, 115, 1, BlackPixel(display, screen), WhitePixel(display, screen));
   
   sizeHints = XAllocSizeHints();
   sizeHints->flags=USPosition | PAspect | PMinSize | PMaxSize;
   sizeHints->min_width=200;
-  sizeHints->min_height=100;
+  sizeHints->min_height=115;
   sizeHints->max_width=200*2;
-  sizeHints->max_height=100;
+  sizeHints->max_height=115;
   XSetWMNormalHints(display, window, sizeHints);
 
   struct WindowHints windowHints;
@@ -176,6 +176,9 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
   XMapWindow(display, window);
 
   int focusCount = 0;
+  int currentPage = 0;
+
+  int snippetCount = 6;
 
   unsigned char* selectedString = NULL;
 
@@ -183,16 +186,23 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
   while (isRunning) {
     XNextEvent(display, &event);
     if (event.type == Expose) {
-      XDrawRectangle(display, window, DefaultGC(display, screen), 3, 3, 193, 93);
+      XDrawRectangle(display, window, DefaultGC(display, screen), 3, 18, 193, 93);
+
+      char* pageBuffer = (char*)malloc(7 * sizeof(char));
+      strcpy(pageBuffer, "Page: ");
+      pageBuffer[6] = (currentPage + 1) + '0';
+      XDrawString(display, window, DefaultGC(display, screen), 5, 15, pageBuffer, strlen(pageBuffer));
+      free(pageBuffer);
+
       struct LinkedSelectionNode* tempCurrentNode = currentNode;
-      for (int x = 0; x < 6; x++) {
+      for (int x = 0; x < snippetCount; x++) {
         if (tempCurrentNode != NULL) {
           char* indexBuffer = (char*)malloc(2 * sizeof(char));
           indexBuffer[0] = (x + 1) + '0';
           indexBuffer[1] = ':';
 
-          XDrawString(display, window, DefaultGC(display, screen), 5, 15 + 15 * x, indexBuffer, 2);
-          XDrawString(display, window, DefaultGC(display, screen), 23, 15 + 15 * x, (char*)tempCurrentNode->string, 28 > tempCurrentNode->stringSize ? tempCurrentNode->stringSize : 28);
+          XDrawString(display, window, DefaultGC(display, screen), 5, 31 + 15 * x, indexBuffer, 2);
+          XDrawString(display, window, DefaultGC(display, screen), 23, 31 + 15 * x, (char*)tempCurrentNode->string, 28 > tempCurrentNode->stringSize ? tempCurrentNode->stringSize : 28);
           tempCurrentNode = tempCurrentNode->previous;
 
           free(indexBuffer);
@@ -224,6 +234,74 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
           selectedString = tempCurrentNode->string;
         }
       }
+
+      if (event.xkey.keycode == XKeysymToKeycode(display, XK_W)) {
+        if (currentPage > 0) {
+          currentPage -= 1;
+        }
+
+        XClearWindow(display, window);
+        XDrawRectangle(display, window, DefaultGC(display, screen), 3, 18, 193, 93);
+
+        char* pageBuffer = (char*)malloc(7 * sizeof(char));
+        strcpy(pageBuffer, "Page: ");
+        pageBuffer[6] = (currentPage + 1) + '0';
+        XDrawString(display, window, DefaultGC(display, screen), 5, 15, pageBuffer, strlen(pageBuffer));
+        free(pageBuffer);
+
+        struct LinkedSelectionNode* tempCurrentNode = currentNode;
+        for (int x = 0; x < snippetCount * currentPage; x++) {
+          if (tempCurrentNode != NULL) {
+            tempCurrentNode = tempCurrentNode->previous;
+          }
+        }
+        for (int x = 0; x < snippetCount; x++) {
+          if (tempCurrentNode != NULL) {
+            char* indexBuffer = (char*)malloc(2 * sizeof(char));
+            indexBuffer[0] = (x + 1) + '0';
+            indexBuffer[1] = ':';
+
+            XDrawString(display, window, DefaultGC(display, screen), 5, 31 + 15 * x, indexBuffer, 2);
+            XDrawString(display, window, DefaultGC(display, screen), 23, 31 + 15 * x, (char*)tempCurrentNode->string, 28 > tempCurrentNode->stringSize ? tempCurrentNode->stringSize : 28);
+            tempCurrentNode = tempCurrentNode->previous;
+
+            free(indexBuffer);
+          }
+        }
+      }
+      if (event.xkey.keycode == XKeysymToKeycode(display, XK_S)) {
+        currentPage += 1;
+
+        XClearWindow(display, window);
+        XDrawRectangle(display, window, DefaultGC(display, screen), 3, 18, 193, 93);
+        
+        char* pageBuffer = (char*)malloc(7 * sizeof(char));
+        strcpy(pageBuffer, "Page: ");
+        pageBuffer[6] = (currentPage + 1) + '0';
+        XDrawString(display, window, DefaultGC(display, screen), 5, 15, pageBuffer, strlen(pageBuffer));
+        free(pageBuffer);
+
+        struct LinkedSelectionNode* tempCurrentNode = currentNode;
+        for (int x = 0; x < snippetCount * currentPage; x++) {
+          if (tempCurrentNode != NULL) {
+            tempCurrentNode = tempCurrentNode->previous;
+          }
+        }
+        for (int x = 0; x < snippetCount; x++) {
+          if (tempCurrentNode != NULL) {
+            char* indexBuffer = (char*)malloc(2 * sizeof(char));
+            indexBuffer[0] = (x + 1) + '0';
+            indexBuffer[1] = ':';
+
+            XDrawString(display, window, DefaultGC(display, screen), 5, 31 + 15 * x, indexBuffer, 2);
+            XDrawString(display, window, DefaultGC(display, screen), 23, 31 + 15 * x, (char*)tempCurrentNode->string, 28 > tempCurrentNode->stringSize ? tempCurrentNode->stringSize : 28);
+            tempCurrentNode = tempCurrentNode->previous;
+
+            free(indexBuffer);
+          }
+        }
+      }
+
       if (event.xkey.keycode == XKeysymToKeycode(display, XK_Escape)) {
         isRunning = 0;
       }
