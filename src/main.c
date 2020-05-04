@@ -55,27 +55,18 @@ void sendSelectionUTF8(Display* display, XSelectionRequestEvent* selectionReques
 struct LinkedSelectionNode* createLinkedSelectionNode() {
   struct LinkedSelectionNode* linkedSelectionNode;
 
-  Display* display;
   Window window;
-  Window rootWindow;
-  int screen;
-
-  Atom selection;
-  Atom property;
-  Atom utf8;
+  Display* display = XOpenDisplay(NULL);
+  Window rootWindow = RootWindow(display, DefaultScreen(display));
 
   XEvent event;
   XSelectionEvent* selectionEvent;
 
-  display = XOpenDisplay(NULL);
-  screen = DefaultScreen(display);
-  rootWindow = RootWindow(display, screen);
-
-  selection = XInternAtom(display, "CLIPBOARD", False);
-  utf8 = XInternAtom(display, "UTF8_STRING", False);
+  Atom selection = XInternAtom(display, "CLIPBOARD", False);
+  Atom utf8 = XInternAtom(display, "UTF8_STRING", False);
+  Atom property = XInternAtom(display, "PROPERTY", False);
 
   window = XCreateSimpleWindow(display, rootWindow, -10, -10, 1, 1, 0, 0, 0);
-  property = XInternAtom(display, "PROPERTY", False);
   XConvertSelection(display, selection, utf8, property, window, CurrentTime);
 
   XNextEvent(display, &event);
@@ -108,6 +99,7 @@ struct LinkedSelectionNode* createLinkedSelectionNode() {
     }
   }
 
+  XDestroyWindow(display, window);
   XCloseDisplay(display);
   return linkedSelectionNode;
 }
@@ -321,6 +313,7 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
     clipboardString = selectedString;
   }
 
+  XDestroyWindow(display, window);
   XCloseDisplay(display);
 }
 
