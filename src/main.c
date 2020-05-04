@@ -195,9 +195,12 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
           indexBuffer[1] = ':';
 
           XDrawString(display, window, DefaultGC(display, screen), 5, 31 + 15 * x, indexBuffer, 2);
-          XDrawString(display, window, DefaultGC(display, screen), 23, 31 + 15 * x, (char*)tempCurrentNode->string, 28 > tempCurrentNode->stringSize ? tempCurrentNode->stringSize : 28);
-          tempCurrentNode = tempCurrentNode->previous;
+          XDrawString(display, window, DefaultGC(display, screen), 21, 31 + 15 * x, (char*)tempCurrentNode->string, 28 > tempCurrentNode->stringSize ? tempCurrentNode->stringSize : 28);
+          if (tempCurrentNode->stringSize > 28) {
+            XDrawString(display, window, DefaultGC(display, screen), 191, 29 + 15 * x, "+", 1);
+          }
 
+          tempCurrentNode = tempCurrentNode->previous;
           free(indexBuffer);
         }
       }
@@ -255,9 +258,12 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
             indexBuffer[1] = ':';
 
             XDrawString(display, window, DefaultGC(display, screen), 5, 31 + 15 * x, indexBuffer, 2);
-            XDrawString(display, window, DefaultGC(display, screen), 23, 31 + 15 * x, (char*)tempCurrentNode->string, 28 > tempCurrentNode->stringSize ? tempCurrentNode->stringSize : 28);
-            tempCurrentNode = tempCurrentNode->previous;
+            XDrawString(display, window, DefaultGC(display, screen), 21, 31 + 15 * x, (char*)tempCurrentNode->string, 28 > tempCurrentNode->stringSize ? tempCurrentNode->stringSize : 28);
+            if (tempCurrentNode->stringSize > 28) {
+              XDrawString(display, window, DefaultGC(display, screen), 191, 29 + 15 * x, "+", 1);
+            }
 
+            tempCurrentNode = tempCurrentNode->previous;
             free(indexBuffer);
           }
         }
@@ -296,9 +302,12 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
             indexBuffer[1] = ':';
 
             XDrawString(display, window, DefaultGC(display, screen), 5, 31 + 15 * x, indexBuffer, 2);
-            XDrawString(display, window, DefaultGC(display, screen), 23, 31 + 15 * x, (char*)tempCurrentNode->string, 28 > tempCurrentNode->stringSize ? tempCurrentNode->stringSize : 28);
-            tempCurrentNode = tempCurrentNode->previous;
+            XDrawString(display, window, DefaultGC(display, screen), 21, 31 + 15 * x, (char*)tempCurrentNode->string, 28 > tempCurrentNode->stringSize ? tempCurrentNode->stringSize : 28);
+            if (tempCurrentNode->stringSize > 28) {
+              XDrawString(display, window, DefaultGC(display, screen), 191, 29 + 15 * x, "+", 1);
+            }
 
+            tempCurrentNode = tempCurrentNode->previous;
             free(indexBuffer);
           }
         }
