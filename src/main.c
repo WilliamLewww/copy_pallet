@@ -219,9 +219,9 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
       focusCount += 1;
     }
     if (event.type == KeyPress) {
-      int keyIndex = event.xkey.keycode - 9;
+      int keyIndex = (event.xkey.keycode - 9) + (snippetCount * currentPage);
 
-      if (keyIndex > 0 && keyIndex < 7) {
+      if (event.xkey.keycode - 9 > 0 && event.xkey.keycode - 9 < 7) {
         struct LinkedSelectionNode* tempCurrentNode = currentNode;
         int count = 0;
         while (tempCurrentNode != NULL && count < keyIndex - 1) {
