@@ -363,14 +363,16 @@ int main(void) {
 
     if (event.type == KeyPress) {
       if (event.xkey.keycode == XKeysymToKeycode(display, XK_C)) {
-        if (rootNode == NULL) {
-          rootNode = createLinkedSelectionNode();
-          currentNode = rootNode;
-        }
-        else {
-          currentNode->next = createLinkedSelectionNode();
-          currentNode->next->previous = currentNode;
-          currentNode = currentNode->next;
+        if (XGetSelectionOwner(display, selection) != rootWindow) {
+          if (rootNode == NULL) {
+            rootNode = createLinkedSelectionNode();
+            currentNode = rootNode;
+          }
+          else {
+            currentNode->next = createLinkedSelectionNode();
+            currentNode->next->previous = currentNode;
+            currentNode = currentNode->next;
+          }
         }
       }
 
