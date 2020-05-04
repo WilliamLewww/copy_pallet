@@ -270,8 +270,17 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
         }
       }
       if (event.xkey.keycode == XKeysymToKeycode(display, XK_S)) {
-        currentPage += 1;
+        struct LinkedSelectionNode* tempCurrentNode = currentNode;
+        for (int x = 0; x < snippetCount * (currentPage + 1); x++) {
+          if (tempCurrentNode != NULL) {
+            tempCurrentNode = tempCurrentNode->previous;
+          }
+        }
 
+        if (tempCurrentNode != NULL) {
+          currentPage += 1;
+        }
+      
         XClearWindow(display, window);
         XDrawRectangle(display, window, DefaultGC(display, screen), 3, 18, 193, 93);
         
@@ -281,7 +290,7 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
         XDrawString(display, window, DefaultGC(display, screen), 5, 15, pageBuffer, strlen(pageBuffer));
         free(pageBuffer);
 
-        struct LinkedSelectionNode* tempCurrentNode = currentNode;
+        tempCurrentNode = currentNode;
         for (int x = 0; x < snippetCount * currentPage; x++) {
           if (tempCurrentNode != NULL) {
             tempCurrentNode = tempCurrentNode->previous;
