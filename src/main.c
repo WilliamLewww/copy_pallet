@@ -6,6 +6,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+unsigned char* clipboardString = NULL;
+
 struct LinkedSelectionNode {
   unsigned char* string;
   uint64_t stringSize;
@@ -48,46 +50,6 @@ void sendSelectionUTF8(Display* display, XSelectionRequestEvent* selectionReques
     selectionEvent.time = selectionRequestEvent->time;
 
     XSendEvent(display, selectionRequestEvent->requestor, True, NoEventMask, (XEvent*)&selectionEvent);
-}
-
-void setClipboard(char* data) {
-  Display* display;
-  Window owner;
-  Window root;
-  int screen;
-  Atom selection;
-  Atom utf8;
-  XEvent event;
-  XSelectionRequestEvent *selectionRequestEvent;
-
-  display = XOpenDisplay(NULL);
-
-  screen = DefaultScreen(display);
-  root = RootWindow(display, screen);
-
-  owner = XCreateSimpleWindow(display, root, -10, -10, 1, 1, 0, 0, 0);
-
-  selection = XInternAtom(display, "CLIPBOARD", False);
-  utf8 = XInternAtom(display, "UTF8_STRING", False);
-  XSetSelectionOwner(display, selection, owner, CurrentTime);
-
-  int isRunning = 1;
-  while (isRunning) {
-    XNextEvent(display, &event);
-    if (event.type == SelectionClear) {
-      isRunning = 0;
-    }
-    if (event.type == SelectionRequest) {
-      selectionRequestEvent = (XSelectionRequestEvent*)&event.xselectionrequest;
-
-      if (selectionRequestEvent->target != utf8 || selectionRequestEvent->property == None) {
-        sendSelectionEmpty(display, selectionRequestEvent);
-      }
-      else {
-        sendSelectionUTF8(display, selectionRequestEvent, utf8, data);
-      }
-    }
-  }
 }
 
 struct LinkedSelectionNode* createLinkedSelectionNode() {
@@ -271,14 +233,16 @@ void createSelectionWindow(struct LinkedSelectionNode* currentNode) {
   XCloseDisplay(display);
 
   if (selectedString != NULL) {
-    setClipboard((char*)selectedString);
+    clipboardString = selectedString;
   }
 }
 
 int main(void) {
   Display* display = XOpenDisplay(0);
   Window rootWindow = DefaultRootWindow(display);
+
   XEvent event;
+  XSelectionRequestEvent* selectionRequestEvent;
 
   unsigned int modifiers = ControlMask | ShiftMask;
   int copyKeyCode = XKeysymToKeycode(display, XK_C);
@@ -290,12 +254,33 @@ int main(void) {
   XGrabKey(display, closeKeyCode, modifiers, rootWindow, False, GrabModeAsync, GrabModeAsync);
   XSelectInput(display, rootWindow, KeyPressMask);
 
+  Atom selection;
+  Atom utf8;
+
+  selection = XInternAtom(display, "CLIPBOARD", False);
+  utf8 = XInternAtom(display, "UTF8_STRING", False);
+
   struct LinkedSelectionNode* rootNode = NULL;
   struct LinkedSelectionNode* currentNode = NULL;
 
   int isRunning = 1;
   while (isRunning) {
     XNextEvent(display, &event);
+
+    if (event.type == SelectionClear) {
+
+    }
+    if (event.type == SelectionRequest) {
+      selectionRequestEvent = (XSelectionRequestEvent*)&event.xselectionrequest;
+
+      if (selectionRequestEvent->target != utf8 || selectionRequestEvent->property == None) {
+        sendSelectionEmpty(display, selectionRequestEvent);
+      }
+      else {
+        sendSelectionUTF8(display, selectionRequestEvent, utf8, (char*)clipboardString);
+      }
+    } 
+
     if (event.type == KeyPress) {
       if (event.xkey.keycode == XKeysymToKeycode(display, XK_C)) {
         if (rootNode == NULL) {
@@ -310,6 +295,7 @@ int main(void) {
       }
 
       if (event.xkey.keycode == XKeysymToKeycode(display, XK_V)) {
+        XSetSelectionOwner(display, selection, rootWindow, CurrentTime);
         createSelectionWindow(currentNode);
       }
 
